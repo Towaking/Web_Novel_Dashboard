@@ -1,6 +1,6 @@
 # NovelLens
 
-Dashboard katalog web novel (Big Data). Data berasal dari katalog publik
+Dashboard katalog web novel (Big Data, Binus MTI). Data berasal dari katalog publik
 NovelUpdates yang sudah diolah pipeline Spark dan Hadoop MapReduce.
 
 Deploy di Streamlit Community Cloud: main file `app/streamlit_app.py`, Python 3.11.

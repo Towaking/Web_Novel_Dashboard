@@ -80,35 +80,136 @@ AI_STUDIO = os.environ.get("NOVELLENS_AI_STUDIO", "1") != "0"
 
 # Visual identity (DESIGN.md): warm paper, library green for anything clickable,
 # ink blue for data, terracotta for the one highlight on a screen.
-PAPER = "#FBF8F3"
-SURFACE = "#FFFFFF"
-INK = "#1E2433"
-# Secondary text: 5.62:1 on paper, 5.11:1 on the sidebar surface (WCAG AA needs 4.5).
-MUTED = "#5B6475"
-LINE = "#E4DED3"
-ACTION = "#1F5E52"
-FOCUS = ACTION
-# Headline figures: 9.71:1 on paper.
-DATA_INK = "#1F3F78"
-# First chart series and the single-series colour.
-BRAND = "#2F5FA8"
-# Chart highlight; text in the same hue uses ACCENT_TEXT (5.13:1 on paper).
-ACCENT = "#C8562E"
-ACCENT_TEXT = "#B8431F"
-GOOD_TEXT = "#1E7A4E"
-WARN_TEXT = "#8A5A0B"
 # Plus Jakarta Sans: an Indonesian typeface that stays legible at small label sizes.
 # The system stack covers an unreachable Google Fonts.
 FONT_STACK = ('"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", '
-              "Roboto, sans-serif")
+              'Roboto, sans-serif')
 # Figures only: equal-width digits keep number columns aligned.
 MONO_STACK = '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
-# Categorical order checked with the dataviz validator on the paper surface: every
-# pair passes CVD and normal-vision separation, so scatters may use all four.
-# Slot 4 is 2.63:1 against paper, so charts using it carry labels or tooltips.
-SEQUENCE = ["#2F5FA8", "#C8562E", "#1B9474", "#B39A12"]
-OTHER = "#8A909C"
-SCALE = [[0.0, "#DCE6F5"], [0.5, "#6F93CC"], [1.0, "#1F3F78"]]
+
+# Light and dark palettes share the same roles (DESIGN.md lists the contrast ratios). Streamlit
+# 1.46+ lets the viewer pick Light, Dark or the system setting; .streamlit/config.toml carries the
+# same two palettes for Streamlit's own widgets, and the colours below paint the rest.
+LIGHT = {
+    "PAPER": "#FBF8F3",
+    "SURFACE": "#FFFFFF",
+    "INK": "#1E2433",
+    # Secondary text: 5.62:1 on paper, 5.11:1 on the sidebar surface (WCAG AA needs 4.5).
+    "MUTED": "#5B6475",
+    "LINE": "#E4DED3",
+    "ACTION": "#1F5E52",
+    # Headline figures: 9.71:1 on paper.
+    "DATA_INK": "#1F3F78",
+    # First chart series and the single-series colour.
+    "BRAND": "#2F5FA8",
+    # Chart highlight; text in the same hue uses ACCENT_TEXT (5.13:1 on paper).
+    "ACCENT": "#C8562E",
+    "ACCENT_TEXT": "#B8431F",
+    "GOOD_TEXT": "#1E7A4E",
+    "WARN_TEXT": "#8A5A0B",
+    # Categorical order checked with the dataviz validator on the paper surface: every
+    # pair passes CVD and normal-vision separation, so scatters may use all four.
+    # Slot 4 is 2.63:1 against paper, so charts using it carry labels or tooltips.
+    "SEQUENCE": ["#2F5FA8", "#C8562E", "#1B9474", "#B39A12"],
+    "OTHER": "#8A909C",
+    "SCALE": [[0.0, "#DCE6F5"], [0.5, "#6F93CC"], [1.0, "#1F3F78"]],
+    # Neutrals for body text, chips, tinted links, field borders, bar tracks and chart gridlines.
+    "ON_ACTION": "#FFFFFF",
+    "SOFT": "#3A4253",
+    "CHIP_BG": "#F2EDE4",
+    "TINT": "#E4EFEC",
+    "TINT_EDGE": "#BCD6CF",
+    "TINT_SOFT": "#F3F8F6",
+    "FIELD_EDGE": "#D9D2C5",
+    "FIELD_HOVER": "#B9B0A0",
+    "SIDE_LINE": "#DDD5C7",
+    "TRACK": "#EFEAE1",
+    "FILL": "#B9BFC9",
+    "GRID": "#EDE7DD",
+    "ZERO": "#D9D2C5",
+    "BRAND_AREA": "rgba(47,95,168,.18)",
+    "EDGE_FADE": "rgba(91,100,117,.30)",
+    "GUIDE": "rgba(30,36,51,.35)",
+}
+DARK = {
+    "PAPER": "#14181F",
+    "SURFACE": "#1C222C",
+    "INK": "#EDEAE4",
+    "MUTED": "#A5ADBB",
+    "LINE": "#2A313D",
+    "ACTION": "#6FCBB5",
+    "DATA_INK": "#8DB2F0",
+    "BRAND": "#8DB2F0",
+    "ACCENT": "#FF8A5C",
+    "ACCENT_TEXT": "#FF8A5C",
+    "GOOD_TEXT": "#5CC49A",
+    "WARN_TEXT": "#E0B04A",
+    # Green is only 1.58:1 against blue here, so series sharing a chart carry direct labels.
+    "SEQUENCE": ["#8DB2F0", "#FF8A5C", "#3E9A84", "#D4B72E"],
+    "OTHER": "#8A909C",
+    "SCALE": [[0.0, "#2C436B"], [0.5, "#5C86C8"], [1.0, "#A9C6F5"]],
+    "ON_ACTION": "#0F1A17",
+    "SOFT": "#CBD0DA",
+    "CHIP_BG": "#232A36",
+    "TINT": "#1B3A34",
+    "TINT_EDGE": "#2C5A50",
+    "TINT_SOFT": "#16282A",
+    "FIELD_EDGE": "#3A4352",
+    "FIELD_HOVER": "#566174",
+    "SIDE_LINE": "#2A313D",
+    "TRACK": "#252C38",
+    "FILL": "#6B7587",
+    "GRID": "#262D39",
+    "ZERO": "#3A4352",
+    "BRAND_AREA": "rgba(141,178,240,.22)",
+    "EDGE_FADE": "rgba(165,173,187,.30)",
+    "GUIDE": "rgba(237,234,228,.40)",
+}
+
+
+def current_mode() -> str:
+    """'dark' when the viewer's Streamlit theme is dark; 'light' otherwise or on Streamlit < 1.46."""
+    try:
+        return "dark" if getattr(st.context.theme, "type", None) == "dark" else "light"
+    except Exception:
+        return "light"
+
+
+# The script reruns from the top on every interaction, so the palette follows the theme live.
+THEME_MODE = current_mode()
+_PALETTE = DARK if THEME_MODE == "dark" else LIGHT
+PAPER = _PALETTE["PAPER"]
+SURFACE = _PALETTE["SURFACE"]
+INK = _PALETTE["INK"]
+MUTED = _PALETTE["MUTED"]
+LINE = _PALETTE["LINE"]
+ACTION = _PALETTE["ACTION"]
+DATA_INK = _PALETTE["DATA_INK"]
+BRAND = _PALETTE["BRAND"]
+ACCENT = _PALETTE["ACCENT"]
+ACCENT_TEXT = _PALETTE["ACCENT_TEXT"]
+GOOD_TEXT = _PALETTE["GOOD_TEXT"]
+WARN_TEXT = _PALETTE["WARN_TEXT"]
+SEQUENCE = _PALETTE["SEQUENCE"]
+OTHER = _PALETTE["OTHER"]
+SCALE = _PALETTE["SCALE"]
+SOFT = _PALETTE["SOFT"]
+CHIP_BG = _PALETTE["CHIP_BG"]
+TINT = _PALETTE["TINT"]
+TINT_EDGE = _PALETTE["TINT_EDGE"]
+TINT_SOFT = _PALETTE["TINT_SOFT"]
+FIELD_EDGE = _PALETTE["FIELD_EDGE"]
+FIELD_HOVER = _PALETTE["FIELD_HOVER"]
+SIDE_LINE = _PALETTE["SIDE_LINE"]
+TRACK = _PALETTE["TRACK"]
+FILL = _PALETTE["FILL"]
+GRID = _PALETTE["GRID"]
+ZERO = _PALETTE["ZERO"]
+BRAND_AREA = _PALETTE["BRAND_AREA"]
+EDGE_FADE = _PALETTE["EDGE_FADE"]
+GUIDE = _PALETTE["GUIDE"]
+ON_ACTION = _PALETTE["ON_ACTION"]
+FOCUS = ACTION
 
 st.markdown(
     f"""
@@ -125,8 +226,9 @@ st.markdown(
 
       /* --- Page rhythm ------------------------------------------------ */
       .block-container {{padding-top: 1.4rem; padding-bottom: 5rem; max-width: 1380px;}}
-      header[data-testid="stHeader"] {{background: transparent; height: 0;}}
-      #MainMenu, footer {{visibility: hidden;}}
+      header[data-testid="stHeader"] {{background: transparent;}}
+      footer {{visibility: hidden;}}
+      [data-testid^="stBaseButton-primary"], [data-testid^="stBaseButton-primary"] p {{color: {ON_ACTION} !important;}}
       /* Streamlit's rainbow strip along the top edge carries no state. */
       [data-testid="stDecoration"] {{display: none;}}
 
@@ -162,15 +264,15 @@ st.markdown(
       .nl-chip {{
         display: inline-block; padding: .16rem .55rem; margin: .14rem .24rem .14rem 0;
         border-radius: 6px; font-size: .75rem; font-weight: 550;
-        background: #F2EDE4; border: 1px solid {LINE}; color: #3A4253;
+        background: {CHIP_BG}; border: 1px solid {LINE}; color: {SOFT};
       }}
-      .nl-chip.on {{background: #E4EFEC; border-color: #BCD6CF; color: {ACTION};}}
+      .nl-chip.on {{background: {TINT}; border-color: {TINT_EDGE}; color: {ACTION};}}
 
       /* --- Supporting text ------------------------------------------------- */
       .nl-note {{
         color: {MUTED}; font-size: .84rem; line-height: 1.6; margin-top: .55rem;
       }}
-      .nl-syn {{color: #3A4253; font-size: .875rem; line-height: 1.6;}}
+      .nl-syn {{color: {SOFT}; font-size: .875rem; line-height: 1.6;}}
 
       /* --- Tabs, buttons, tables --------------------------------------------- */
       .stTabs [data-baseweb="tab-list"] {{gap: .35rem; border-bottom: 1px solid {LINE};}}
@@ -185,14 +287,14 @@ st.markdown(
       /* --- Inputs: white field, hairline border, green ring on focus -------- */
       [data-baseweb="input"], [data-baseweb="textarea"], [data-baseweb="select"] > div {{
         background: {SURFACE} !important;
-        border: 1px solid #D9D2C5 !important; border-radius: 8px !important;
+        border: 1px solid {FIELD_EDGE} !important; border-radius: 8px !important;
         transition: border-color .15s ease, box-shadow .15s ease;
       }}
       /* The inner field paints the theme's grey surface over the wrapper otherwise. */
       [data-baseweb="input"] input, [data-baseweb="textarea"] textarea,
       [data-baseweb="base-input"] {{background: transparent !important;}}
       [data-baseweb="input"]:hover, [data-baseweb="textarea"]:hover,
-      [data-baseweb="select"] > div:hover {{border-color: #B9B0A0 !important;}}
+      [data-baseweb="select"] > div:hover {{border-color: {FIELD_HOVER} !important;}}
       [data-baseweb="input"]:focus-within, [data-baseweb="textarea"]:focus-within,
       [data-baseweb="select"] > div:focus-within {{
         border-color: {FOCUS} !important; box-shadow: 0 0 0 2px {FOCUS}40 !important;
@@ -222,10 +324,10 @@ st.markdown(
       }}
       a.nl-open {{
         flex: none; padding: .45rem .95rem; min-height: 44px; display: inline-flex; align-items: center;
-        border-radius: 8px; border: 1px solid #BCD6CF; color: {ACTION} !important; background: #F3F8F6;
+        border-radius: 8px; border: 1px solid {TINT_EDGE}; color: {ACTION} !important; background: {TINT_SOFT};
         text-decoration: none !important; font-weight: 600; font-size: .85rem;
       }}
-      a.nl-open:hover {{border-color: {ACTION}; background: #E4EFEC;}}
+      a.nl-open:hover {{border-color: {ACTION}; background: {TINT};}}
       .nl-rec.compact .stats {{flex-direction: row; gap: 1.6rem; align-items: flex-start;}}
       @media (max-width: 640px) {{
         .nl-rec {{grid-template-columns: 1fr;}}
@@ -236,7 +338,7 @@ st.markdown(
       /* --- Sidebar -------------------------------------------------------- */
       section[data-testid="stSidebar"] {{border-right: 1px solid {LINE};}}
       section[data-testid="stSidebar"] .stRadio label {{font-size: .92rem;}}
-      .nl-brand {{padding: .2rem .2rem 1rem; margin-bottom: .4rem; border-bottom: 1px solid #DDD5C7;}}
+      .nl-brand {{padding: .2rem .2rem 1rem; margin-bottom: .4rem; border-bottom: 1px solid {SIDE_LINE};}}
       .nl-brand .name {{font-size: 1.15rem; font-weight: 720; letter-spacing: -.015em; color: {INK};}}
       .nl-brand .sub {{font-size: .78rem; color: {MUTED}; margin-top: .15rem;}}
       /* Section groups: a plain header row, no card. */
@@ -272,7 +374,7 @@ st.markdown(
         border-color: transparent; min-height: 36px; padding: .3rem .55rem;
       }}
       .nl-status {{display: flex; align-items: center; gap: .45rem; margin-top: 1rem; padding-top: .8rem;
-                  border-top: 1px solid #DDD5C7;
+                  border-top: 1px solid {SIDE_LINE};
                   font-size: .75rem; color: {MUTED}; font-weight: 500;}}
       .nl-status .dot {{width: 8px; height: 8px; border-radius: 50%; flex: none;}}
 
@@ -302,13 +404,13 @@ st.markdown(
       .nl-findings li {{display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 1.2rem; align-items: baseline;
                        padding: .85rem 0; border-bottom: 1px solid {LINE};}}
       .nl-findings .fig {{font-size: 1.4rem; font-weight: 600;}}
-      .nl-findings .txt {{font-size: .97rem; line-height: 1.55; color: #3A4253; max-width: 70ch;}}
+      .nl-findings .txt {{font-size: .97rem; line-height: 1.55; color: {SOFT}; max-width: 70ch;}}
       .nl-answer {{font-size: 1.04rem; line-height: 1.55; color: {INK}; max-width: 80ch; margin: .2rem 0 1rem;}}
       .nl-group {{font-size: .8rem; font-weight: 700; color: {MUTED}; margin-bottom: .35rem;}}
-      .nl-prose {{max-width: 72ch; line-height: 1.65; color: #3A4253;}}
+      .nl-prose {{max-width: 72ch; line-height: 1.65; color: {SOFT};}}
       .nl-prose p {{margin: 0 0 .8rem;}}
       .nl-prose.small {{font-size: .86rem; color: {MUTED};}}
-      .nl-limits {{margin: 0; padding-left: 1.1rem; line-height: 1.6; color: #3A4253;}}
+      .nl-limits {{margin: 0; padding-left: 1.1rem; line-height: 1.6; color: {SOFT};}}
       .nl-limits li {{margin-bottom: .45rem;}}
       /* Governance checklist: the status word leads each row, colour repeats it. */
       .nl-pillar {{display: flex; justify-content: space-between; align-items: baseline; margin: .4rem 0 .3rem;
@@ -379,8 +481,8 @@ st.markdown(
       .nl-bar {{display: grid; grid-template-columns: 8.5rem minmax(0, 1fr) 2.6rem 4.8rem; gap: .7rem;
                align-items: center; font-size: .85rem;}}
       .nl-bar .g {{white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}}
-      .nl-bar .track {{position: relative; height: 10px; border-radius: 4px; background: #EFEAE1;}}
-      .nl-bar .fill {{position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: #B9BFC9;}}
+      .nl-bar .track {{position: relative; height: 10px; border-radius: 4px; background: {TRACK};}}
+      .nl-bar .fill {{position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: {FILL};}}
       .nl-bar.on .fill {{background: {BRAND};}}
       .nl-bar .tick {{position: absolute; top: -3px; width: 2px; height: 16px; background: {ACCENT};}}
       .nl-bar .p {{text-align: right; color: {INK} !important;}}
@@ -395,6 +497,7 @@ st.markdown(
         border: 1px solid {LINE}; border-radius: 8px; padding: .55rem .8rem;
         background: {SURFACE}; min-height: 44px;
       }}
+      [data-testid="stMain"] [data-testid="stPageLink"] a, [data-testid="stMain"] [data-testid="stPageLink"] a p {{color: {ACTION};}}
       [data-testid="stMain"] [data-testid="stPageLink"] a:hover {{border-color: {ACTION};}}
       [data-testid="stPageLink"] a:focus-visible {{outline: 2px solid {FOCUS}; outline-offset: 2px;}}
     </style>
@@ -587,7 +690,7 @@ def style_fig(fig, height: int | None = None):
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#3A4253", size=13, family=FONT_STACK),
+        font=dict(color=SOFT, size=13, family=FONT_STACK),
         # 4px rounded data ends, matching the card radius language; plotly only
         # rounds the outer end of a stacked bar, so segments still meet flush.
         barcornerradius=4,
@@ -595,8 +698,8 @@ def style_fig(fig, height: int | None = None):
         legend=dict(bgcolor="rgba(0,0,0,0)", title_text=""),
         hoverlabel=dict(bgcolor=SURFACE, bordercolor=LINE, font=dict(color=INK)),
     )
-    fig.update_xaxes(gridcolor="#EDE7DD", zerolinecolor="#D9D2C5")
-    fig.update_yaxes(gridcolor="#EDE7DD", zerolinecolor="#D9D2C5")
+    fig.update_xaxes(gridcolor=GRID, zerolinecolor=ZERO)
+    fig.update_yaxes(gridcolor=GRID, zerolinecolor=ZERO)
     if height:
         fig.update_layout(height=height)
     return fig
@@ -924,7 +1027,7 @@ def page_analytics() -> None:
                 box_df, x="primary_genre", y="weighted_rating", points=False,
                 labels={"primary_genre": "", "weighted_rating": "Rating"},
             )
-            fig.update_traces(marker_color=BRAND, line_color=BRAND, fillcolor="rgba(47,95,168,.18)")
+            fig.update_traces(marker_color=BRAND, line_color=BRAND, fillcolor=BRAND_AREA)
             st.plotly_chart(style_fig(fig, 430), use_container_width=True)
 
     # Length & rating
@@ -1883,7 +1986,7 @@ def page_warehouse() -> None:
     with tab_model:
         if STAR_SCHEMA_IMAGE.is_file():
             _, centre, _ = st.columns([1, 5, 1])
-            centre.image(str(STAR_SCHEMA_IMAGE), use_column_width=True)
+            centre.image(str(STAR_SCHEMA_IMAGE))
         else:
             columns = {name: list(load_lake(f"model/{name}").columns) for name in counts}
             st.markdown(star_schema_svg(columns, counts), unsafe_allow_html=True)
@@ -2228,7 +2331,7 @@ def page_graph() -> None:
                     xs += [x0, x1, None]
                     ys += [y0, y1, None]
                 fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines", hoverinfo="skip", showlegend=False,
-                                         line=dict(width=width, color="rgba(91,100,117,.30)")))
+                                         line=dict(width=width, color=EDGE_FADE)))
             names = [n for n in positions]
             pr = info["pagerank"].reindex(names).fillna(0)
             community = info["community"].reindex(names).fillna(-1).astype(int) if has_community else pd.Series(0, index=names)
@@ -2426,7 +2529,7 @@ def page_content_graph() -> None:
             for row in links.itertuples(index=False):
                 (x0, y0), (x1, y1) = pos[int(row.lo)], pos[int(row.hi)]
                 fig.add_trace(go.Scatter(x=[x0, x1], y=[y0, y1], mode="lines", hoverinfo="skip", showlegend=False,
-                                         line=dict(width=.6 + 5 * row.n_edges / peak, color="rgba(91,100,117,.30)")))
+                                         line=dict(width=.6 + 5 * row.n_edges / peak, color=EDGE_FADE)))
             ids = list(pos)
             fig.add_trace(go.Scatter(
                 x=[pos[c][0] for c in ids], y=[pos[c][1] for c in ids], mode="markers+text", showlegend=False,
@@ -2515,7 +2618,7 @@ def page_content_graph() -> None:
                     xs += [layout[u][0], layout[v][0], None]
                     ys += [layout[u][1], layout[v][1], None]
                 fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines", hoverinfo="skip", showlegend=False,
-                                         line=dict(width=1, color="rgba(91,100,117,.30)")))
+                                         line=dict(width=1, color=EDGE_FADE)))
                 order = list(ego.nodes)
                 same = [int(names.loc[n, "community"]) == int(me["community"]) for n in order]
                 fig.add_trace(go.Scatter(
@@ -3266,8 +3369,8 @@ def page_tags() -> None:
     )
     fig.update_traces(marker=dict(size=10, line=dict(width=1.5, color=SURFACE)),
                       textposition="top center", textfont=dict(size=11, color=INK))
-    fig.add_hline(y=0, line=dict(color="rgba(30,36,51,.35)", width=1))
-    fig.add_vline(x=supply, line=dict(color="rgba(30,36,51,.35)", width=1, dash="dot"))
+    fig.add_hline(y=0, line=dict(color=GUIDE, width=1))
+    fig.add_vline(x=supply, line=dict(color=GUIDE, width=1, dash="dot"))
     fig.update_layout(legend=dict(orientation="h", y=1.08))
     st.plotly_chart(style_fig(fig, 560), use_container_width=True)
     st.markdown(
@@ -3887,6 +3990,8 @@ def page_dataset() -> None:
         sort_col=sort_col, sort_dir=sort_dir, first_row=start + 1,
         # Capped so 250 rows scroll inside the table instead of stretching the page.
         height=min(42 + 33 * len(rows), 560),
+        theme=dict(bg=SURFACE, surface=CHIP_BG, line=LINE, ink=INK, muted=MUTED, accent=ACTION,
+                   hover=PAPER if THEME_MODE == "light" else TRACK),
         key="dataset_table", default=None,
     )
     if clicked and clicked != st.session_state.get("dataset_sort"):
@@ -3932,7 +4037,7 @@ def guarded(render):
 
 #: url_path -> page, so pages can link to each other with st.page_link.
 PAGE = {
-    "overview": st.Page(guarded(page_overview), title="Overview", url_path="overview", default=True),
+    "overview": st.Page(guarded(page_overview), title="Overview", default=True),
     "lookup": st.Page(guarded(page_lookup), title="Title Lookup", url_path="lookup"),
     "studio": st.Page(guarded(page_studio), title="AI Studio", url_path="studio"),
     "analytics": st.Page(guarded(page_analytics), title="Catalogue Analytics", url_path="analytics"),

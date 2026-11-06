@@ -1768,6 +1768,10 @@ def _schema_rows(name: str, columns: list[str]) -> list[tuple[str, str]]:
     return [(c, marker(c)) for c in ordered]
 
 
+#: Star-schema diagram shared with the report (Figure 4.7); the SVG below is the fallback.
+STAR_SCHEMA_IMAGE = Path(__file__).resolve().parent / "assets" / "star_schema.png"
+
+
 def star_schema_svg(tables: dict[str, list[str]], counts: dict[str, int]) -> str:
     """Star schema as inline SVG in Power BI's model-view style: table cards with
     PK / FK / Σ markers, cardinality at each line end, filter direction mid-line."""
@@ -1877,12 +1881,16 @@ def page_warehouse() -> None:
     tab_query, tab_model = st.tabs(["Ask the warehouse", "How it is modelled"])
     # The model tab is drawn first: the query tab returns early on empty results.
     with tab_model:
-        columns = {name: list(load_lake(f"model/{name}").columns) for name in counts}
-        st.markdown(star_schema_svg(columns, counts), unsafe_allow_html=True)
-        st.caption("Read it like Power BI's model view: 1 and * mark each side of a relationship, the "
-                   "arrow is the filter direction, and a double arrow means filters cross both ways. "
-                   "The fact-to-bridge links need that, or a genre, tag or author filter could not "
-                   "reach the fact table. Σ marks the summable measures; dashed cards are bridge tables.")
+        if STAR_SCHEMA_IMAGE.is_file():
+            _, centre, _ = st.columns([1, 5, 1])
+            centre.image(str(STAR_SCHEMA_IMAGE), use_column_width=True)
+        else:
+            columns = {name: list(load_lake(f"model/{name}").columns) for name in counts}
+            st.markdown(star_schema_svg(columns, counts), unsafe_allow_html=True)
+        st.caption("Entity-relationship diagram of the star schema, the same figure as in the report. A single "
+                   "bar marks the one side of a relationship and the crow's foot marks the many side. Genres, "
+                   "tags and authors reach the fact table through bridge tables, so a title with several genres "
+                   "is still one row in the fact. Row counts are from the build used in the report.")
         notes, measures = st.columns([2, 3], gap="large")
         with notes:
             st.markdown("**Why this shape**")

@@ -1,0 +1,22 @@
+# Tema aplikasi, sesuai DESIGN.md: kertas hangat, hijau untuk yang bisa diklik.
+# Streamlit 1.39 hanya menerima satu tema kustom, jadi tema terang ditetapkan
+# eksplisit; tema gelap di DESIGN.md menunggu Streamlit >= 1.46 ([theme.dark]).
+
+[theme]
+base = "light"
+primaryColor = "#1F5E52"
+backgroundColor = "#FBF8F3"
+secondaryBackgroundColor = "#F2EDE4"
+textColor = "#1E2433"
+font = "sans serif"
+
+[server]
+headless = true
+fileWatcherType = "poll"
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+showErrorDetails = false

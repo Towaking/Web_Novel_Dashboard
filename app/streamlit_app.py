@@ -87,9 +87,9 @@ FONT_STACK = ('"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI
 # Figures only: equal-width digits keep number columns aligned.
 MONO_STACK = '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
 
-# Light and dark palettes share the same roles (DESIGN.md lists the contrast ratios). Streamlit
-# 1.46+ lets the viewer pick Light, Dark or the system setting; .streamlit/config.toml carries the
-# same two palettes for Streamlit's own widgets, and the colours below paint the rest.
+# Light and dark palettes share the same roles (DESIGN.md lists the contrast ratios). Streamlit itself
+# stays on one light theme (.streamlit/config.toml); the dark palette repaints the page through the
+# stylesheet below, switched by the sidebar toggle.
 LIGHT = {
     "PAPER": "#FBF8F3",
     "SURFACE": "#FFFFFF",
@@ -135,7 +135,7 @@ DARK = {
     "PAPER": "#14181F",
     "SURFACE": "#1C222C",
     "INK": "#EDEAE4",
-    "MUTED": "#A5ADBB",
+    "MUTED": "#CDD3DE",
     "LINE": "#2A313D",
     "ACTION": "#6FCBB5",
     "DATA_INK": "#8DB2F0",
@@ -149,7 +149,7 @@ DARK = {
     "OTHER": "#8A909C",
     "SCALE": [[0.0, "#2C436B"], [0.5, "#5C86C8"], [1.0, "#A9C6F5"]],
     "ON_ACTION": "#0F1A17",
-    "SOFT": "#CBD0DA",
+    "SOFT": "#E1E5EC",
     "CHIP_BG": "#232A36",
     "TINT": "#1B3A34",
     "TINT_EDGE": "#2C5A50",
@@ -168,15 +168,18 @@ DARK = {
 
 
 def current_mode() -> str:
-    """'dark' when the viewer's Streamlit theme is dark; 'light' otherwise or on Streamlit < 1.46."""
-    try:
-        return "dark" if getattr(st.context.theme, "type", None) == "dark" else "light"
-    except Exception:
-        return "light"
+    """Light unless the sidebar switch is on, or the page was opened with ?theme=dark."""
+    if "nl_dark" in st.session_state:
+        return "dark" if st.session_state["nl_dark"] else "light"
+    return "dark" if st.query_params.get("theme") == "dark" else "light"
 
 
-# The script reruns from the top on every interaction, so the palette follows the theme live.
+# The script reruns from the top on every interaction, so the palette follows the switch live.
 THEME_MODE = current_mode()
+if THEME_MODE == "dark":
+    st.query_params["theme"] = "dark"
+elif "theme" in st.query_params:
+    del st.query_params["theme"]
 _PALETTE = DARK if THEME_MODE == "dark" else LIGHT
 PAPER = _PALETTE["PAPER"]
 SURFACE = _PALETTE["SURFACE"]
@@ -228,6 +231,8 @@ st.markdown(
       .block-container {{padding-top: 1.4rem; padding-bottom: 5rem; max-width: 1380px;}}
       header[data-testid="stHeader"] {{background: transparent;}}
       footer {{visibility: hidden;}}
+      [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * {{color: {MUTED} !important; opacity: 1 !important;}}
+      [data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p {{color: {INK} !important; opacity: 1 !important;}}
       [data-testid^="stBaseButton-primary"], [data-testid^="stBaseButton-primary"] p {{color: {ON_ACTION} !important;}}
       /* Streamlit's rainbow strip along the top edge carries no state. */
       [data-testid="stDecoration"] {{display: none;}}
@@ -505,6 +510,74 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Streamlit keeps its light theme, so in dark mode the stylesheet repaints its widgets as well.
+if THEME_MODE == "dark":
+    st.markdown(
+        f"""
+        <style>
+          .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stHeader"] {{
+            background: {PAPER}; color: {INK};}}
+          [data-testid="stSidebar"], [data-testid="stSidebar"] > div:first-child {{background: {SURFACE};}}
+          .stApp p, .stApp li, .stApp label, .stApp h1, .stApp h2, .stApp h3, .stApp h4,
+          [data-testid="stMarkdownContainer"], [data-testid="stWidgetLabel"] {{color: {INK};}}
+          hr {{border-color: {LINE};}}
+          [data-testid="stToolbar"] button, [data-testid="stMainMenu"] button {{color: {INK};}}
+
+          /* Fields */
+          [data-baseweb="input"], [data-baseweb="base-input"], [data-baseweb="textarea"],
+          [data-baseweb="select"] > div {{
+            background-color: {SURFACE} !important; border-color: {FIELD_EDGE} !important; color: {INK};}}
+          [data-baseweb="input"] input, [data-baseweb="base-input"] input, [data-baseweb="textarea"] textarea,
+          [data-baseweb="select"] input, [data-baseweb="select"] span, [data-baseweb="select"] div {{
+            color: {INK} !important; -webkit-text-fill-color: {INK};}}
+          [data-baseweb="select"] svg, [data-testid="stNumberInput"] svg {{fill: {INK}; color: {INK};}}
+          [data-testid="stNumberInput"] button {{background: {CHIP_BG}; color: {INK}; border-color: {FIELD_EDGE};}}
+          [data-baseweb="popover"] [data-baseweb="menu"], [data-baseweb="popover"] ul {{
+            background: {SURFACE}; color: {INK};}}
+          [data-baseweb="popover"] li {{color: {INK};}}
+          [data-baseweb="popover"] li:hover, [data-baseweb="popover"] li[aria-selected="true"] {{background: {CHIP_BG};}}
+          [data-baseweb="tag"] {{background-color: {TINT} !important; color: {INK};}}
+
+          /* Tabs, expanders, buttons, alerts */
+          [data-baseweb="tab-list"] {{border-bottom-color: {LINE};}}
+          [data-baseweb="tab"] {{color: {INK};}}
+          [data-baseweb="tab"][aria-selected="true"] {{color: {ACTION};}}
+          [data-baseweb="tab-highlight"] {{background-color: {ACTION} !important;}}
+          [data-testid="stExpander"] details {{background: {SURFACE}; border-color: {LINE}; color: {INK};}}
+          [data-testid="stExpander"] summary, [data-testid="stExpander"] summary p {{color: {INK};}}
+          [data-testid^="stBaseButton-secondary"] {{background: {SURFACE}; color: {INK}; border-color: {FIELD_EDGE};}}
+          [data-testid^="stBaseButton-secondary"] p {{color: {INK};}}
+          [data-testid^="stBaseButton-primary"] {{background: {ACTION}; border-color: {ACTION};}}
+          [data-testid="stAlert"] {{background: {SURFACE}; color: {INK}; border: 1px solid {LINE};}}
+          [data-testid="stAlert"] p {{color: {INK};}}
+          [data-testid="stCode"] pre, [data-testid="stCode"] code {{background: {SURFACE}; color: {INK};}}
+
+          /* Slider, radio, checkbox and toggle use the primary colour; lift it for the dark ground */
+          [data-testid="stSlider"] [data-baseweb="slider"] > div > div,
+          [data-testid="stSlider"] [role="slider"] {{filter: brightness(1.9) saturate(1.15);}}
+          [data-baseweb="checkbox"] > span:first-child {{filter: brightness(1.7) saturate(1.1);}}
+          [data-baseweb="radio"] > div:first-child {{background-color: {SURFACE} !important; border: 2px solid {FIELD_HOVER} !important;}}
+          [data-baseweb="radio"]:has(input:checked) > div:first-child {{background-color: {ACTION} !important; border-color: {ACTION} !important;}}
+          [data-baseweb="radio"]:has(input:checked) > div:first-child > div {{background-color: {PAPER} !important;}}
+          [data-testid="stCheckbox"] label {{background: transparent !important;}}
+          [data-testid="stCheckbox"] label > div:last-child {{background: transparent !important;}}
+          [data-testid="stCheckbox"] label:has(input:checked) > div:first-child {{background-color: {ACTION} !important;}}
+          [data-testid="stCheckbox"] label:not(:has(input:checked)) > div:first-child {{background-color: {FIELD_EDGE} !important;}}
+          [data-testid="stCheckbox"] label > div:first-child > div {{background-color: {PAPER} !important;}}
+          [data-testid="stVerticalBlockBorderWrapper"] {{border-color: {LINE} !important;}}
+          [role="dialog"], [data-testid="stDialog"] > div, [data-baseweb="modal"] > div > div {{background: {SURFACE} !important; color: {INK};}}
+          [role="dialog"] p, [role="dialog"] label, [role="dialog"] h2 {{color: {INK};}}
+          [data-testid="stIconMaterial"] {{color: {INK};}}
+          [data-testid="stExpander"] summary {{background: {CHIP_BG};}}
+
+          /* The table is drawn on a canvas that only follows Streamlit's own theme; invert keeps it readable */
+          [data-testid="stDataFrame"] {{filter: invert(.92) hue-rotate(180deg);}}
+          [data-testid="stImage"] img {{border-radius: 8px;}}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 # Data layer
 class DataUnavailable(RuntimeError):
@@ -695,11 +768,11 @@ def style_fig(fig, height: int | None = None):
         # rounds the outer end of a stacked bar, so segments still meet flush.
         barcornerradius=4,
         margin=dict(l=0, r=10, t=10, b=0),
-        legend=dict(bgcolor="rgba(0,0,0,0)", title_text=""),
+        legend=dict(bgcolor="rgba(0,0,0,0)", title_text="", font=dict(color=SOFT)),
         hoverlabel=dict(bgcolor=SURFACE, bordercolor=LINE, font=dict(color=INK)),
     )
-    fig.update_xaxes(gridcolor=GRID, zerolinecolor=ZERO)
-    fig.update_yaxes(gridcolor=GRID, zerolinecolor=ZERO)
+    fig.update_xaxes(gridcolor=GRID, zerolinecolor=ZERO, tickfont=dict(color=MUTED), title_font=dict(color=SOFT))
+    fig.update_yaxes(gridcolor=GRID, zerolinecolor=ZERO, tickfont=dict(color=MUTED), title_font=dict(color=SOFT))
     if height:
         fig.update_layout(height=height)
     return fig
@@ -4120,6 +4193,7 @@ def sidebar_nav() -> None:
         with st.expander(section, expanded=True):
             for page in pages:
                 st.page_link(page, icon=PAGE_ICON[keys[id(page)]])
+    st.toggle("Dark mode", value=THEME_MODE == "dark", key="nl_dark")
     st.markdown(lake_status_html(), unsafe_allow_html=True)
     # Streamlit closes its own navigation on phones after a tap; page links in a
     # custom sidebar do not, so the open sidebar would keep covering the page.
